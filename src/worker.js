@@ -4,7 +4,7 @@ export default {
       return new Response("Method not allowed", { status: 405 });
     }
 
-    const url = new URL(request.url);
+    const requestUrl = new URL(request.url);
 
     try {
       const { url, prompt } = await request.json();
@@ -13,19 +13,22 @@ export default {
         return new Response("Invalid request", { status: 400 });
       }
 
-      switch (url.pathname) {
+      switch (requestUrl.pathname) {
         case "/ocr":
           // Process OCR requests
-          const aimlApiOcrResponse = await fetch("https://api.aimlapi.com/ocr", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${env.AIML_API_KEY}`,
-            },
-            body: JSON.stringify({
-              document: url,
-            }),
-          })
+          const aimlApiOcrResponse = await fetch(
+            "https://api.aimlapi.com/ocr",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${env.AIML_API_KEY}`,
+              },
+              body: JSON.stringify({
+                document: url,
+              }),
+            }
+          );
 
           const ocrResponse = await aimlApiOcrResponse.json();
 
@@ -36,25 +39,28 @@ export default {
           });
         case "/ofr":
           // Process OFR requests
-          const aimlApiOfrResponse = await fetch("https://api.aimlapi.com/vision", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${env.AIML_API_KEY}`,
-            },
-            body: JSON.stringify({
-              image: {
-                source: {
-                  imageUri: url,
-                },
+          const aimlApiOfrResponse = await fetch(
+            "https://api.aimlapi.com/vision",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${env.AIML_API_KEY}`,
               },
-              features: [
-                {
-                  type: "FACE_DETECTION",
-                }
-              ]
-            }),
-          });
+              body: JSON.stringify({
+                image: {
+                  source: {
+                    imageUri: url,
+                  },
+                },
+                features: [
+                  {
+                    type: "FACE_DETECTION",
+                  },
+                ],
+              }),
+            }
+          );
 
           const ofrResponse = await aimlApiOfrResponse.json();
 
@@ -77,7 +83,7 @@ export default {
                 model: env.AIML_MODEL,
                 messages: [
                   {
-                    prompt
+                    prompt,
                   },
                 ],
                 stream: false,
@@ -87,14 +93,11 @@ export default {
 
           const chatResponse = await aimlApiChatResponse.json();
 
-          return new Response(
-            JSON.stringify(chatResponse),
-            {
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
-          );
+          return new Response(JSON.stringify(chatResponse), {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          });
       }
     } catch (error) {
       return new Response(JSON.stringify({ error: error.message }), {
