@@ -1,1 +1,1 @@
-# ocr-worker
+# OCR Worker
